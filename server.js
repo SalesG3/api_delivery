@@ -9,8 +9,8 @@ const auth = function(req, res, next){
         return
     }
 
-    else if(req.headers.token == process.env.TOKEN && req.method != "GET"){
-        console.log("Faltando configurar Log para outros metodos")
+    else if(req.headers.token == process.env.TOKEN && req.method == "POST"){
+        console.log("Postagem realizada! Rota: " + req.url)
         next()
         return
     }

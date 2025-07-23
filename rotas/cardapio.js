@@ -1,7 +1,7 @@
 const { app, con } = require('../server')
 
 // Consultar Entidade:
-app.get('/data/entidade', async(req, res) => {
+app.get('/exportData/entidade', async(req, res) => {
 
     let [data] = await con.promise().query(`SELECT * FROM ENTIDADE`)
 
@@ -13,7 +13,7 @@ app.get('/data/entidade', async(req, res) => {
 })
 
 // Consultar Categorias:
-app.get('/data/categorias', async(req, res) => {
+app.get('/exportData/categorias', async(req, res) => {
     
     let [data] = await con.promise().query(`SELECT * FROM CATEGORIAS`)
 
@@ -25,7 +25,7 @@ app.get('/data/categorias', async(req, res) => {
 })
 
 // Consultar Produtos:
-app.get('/data/produtos', async(req, res) => {
+app.get('/exportData/produtos', async(req, res) => {
     
     let [data] = await con.promise().query(`SELECT * FROM PRODUTOS`)
 

@@ -2,6 +2,8 @@ const { app, con } = require('../server')
 
 // Criação de Novo pedido
 app.post('/importData/pedido', async(req, res) => {
+
+    // Validações Iniciais
     if(!req.body || !req.body.dataRows){
         res.status(400).send({
             error:"Parâmetros esperados não encontrados!"
@@ -18,7 +20,7 @@ app.post('/importData/pedido', async(req, res) => {
         return
     }
 
-    
+    // Execução e Tratamento do Banco
     try{
 
         await con.promise().beginTransaction()
@@ -26,11 +28,9 @@ app.post('/importData/pedido', async(req, res) => {
         let [data] = await con.promise().execute(`CALL NOVO_PEDIDO( ?, ?, ?, ?);`,
             [cd_pedido, id_cliente, pagamento, status]
         )
-
-        let sql = `INSERT INTO ITENS_PEDIDO (ID_PEDIDO, ID_PRODUTO, QUANTIDADE, VL_UNITARIO) VALUES `;
-
         let id_pedido = data[0][0].ID_PEDIDO
 
+        let sql = `INSERT INTO ITENS_PEDIDO (ID_PEDIDO, ID_PRODUTO, QUANTIDADE, VL_UNITARIO) VALUES `;
         for(let i = 0; i < itens.length; i++){
             sql += `(${id_pedido}, ${itens[i].id_produto}, ${itens[i].quantidade}, ${itens[i].vl_unitario})`
         }
@@ -42,11 +42,12 @@ app.post('/importData/pedido', async(req, res) => {
         await con.promise().commit()
 
         res.status(200).send({
-            sucesso: `${itens.length} registros inseridos com sucesso`
+            sucesso: `${dataItens.affectedRows} registros inseridos com sucesso`
         })
     }
-    catch(err){
 
+    // Tratamento de Erros
+    catch(err){
         await con.promise().rollback()
 
         if(err.code == "ER_DUP_ENTRY"){
@@ -63,8 +64,17 @@ app.post('/importData/pedido', async(req, res) => {
             res.status(500).send(
                 err
             )
-            
+
             return
         }
     }
+})
+
+// Consulta de Pedidos
+app.get('/exportData/pedido', async(req, res) => {
+
+    let [data] = await con.promise().execute(`CALL GET_PEDIDOS()`)
+
+    res.status(200).send(data[0])
+
 })

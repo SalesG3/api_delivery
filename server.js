@@ -16,6 +16,7 @@ const auth = function(req, res, next){
     }
 
     else{
+        console.log("Token Inválido! IP" + req.ip)
         res.status(401).send({auth: "Não autorizado!"})
         return
     }

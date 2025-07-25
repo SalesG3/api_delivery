@@ -37,3 +37,4 @@ app.post('/login', async(req, res) => {
 // Conexão com rotas:
 require('./rotas/cardapio')
 require('./rotas/pedidos')
+require('./rotas/clientes')

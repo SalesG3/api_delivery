@@ -38,3 +38,4 @@ app.post('/login', async(req, res) => {
 require('./rotas/cardapio')
 require('./rotas/pedidos')
 require('./rotas/clientes')
+require('./rotas/categorias')

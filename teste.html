@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <input type="file" name="" id="imagem">
+    <button onclick="upload()">
+        Enviar!
+    </button>
+    
+    <script>
+        async function upload(){
+            console.log(document.querySelector('#imagem').files[0])
+
+            let request = await fetch("http://192.168.0.134:8081/importData/categoria", {
+                method: "POST",
+                headers: {
+                    token:"2de0a396b5ce35d94212f60a57c44b30",
+                    "Content-Type":"application/json"
+                },
+                body: JSON.stringify({
+                    dataRows: {
+                        img: document.querySelector('#imagem').files[0],
+                        cd_categoria: "5",
+                        nm_categoria: "Teste Teste",
+                        ds_categoria: ""
+                    }
+                })
+            })
+
+            if(request.status != 200){ console.log(request); return}
+
+            let data = request.json()
+
+            console.log(data)
+        }
+    </script>
+</body>
+</html>

@@ -17,33 +17,40 @@ app.post('/importData/login', async(req, res) => {
         })
     }
 
+    else if(numero.length < 11){
+        res.status(400).send({
+            message: "Número inválido!"
+        })
+        return
+    }
+
     try{
+        await con.promise().beginTransaction()
         let [data] = await con.promise().execute(`CALL NOVO_CLIENTE(?, ?, ?)`,
             [nm_cliente, numero, senha]
         )
 
+        await con.promise().commit()
         res.status(200).send({
             sucesso: "Usuário cadastrado com sucesso!"
         })
-
         return
     }
     catch(err){
+        await con.promise().rollback()
+
         if(err.code == "ER_DUP_ENTRY"){
             let match = err.sqlMessage.match(/for key '(.*?)'/)
             
             res.status(400).send({
                 unique: `Chave Duplicada! (${match[1].split('.')})`
             })
-
             return
         }
         else{
-            
             res.status(500).send(
                 err
             )
-
             return
         }
     }

@@ -1,6 +1,9 @@
 const { app, con } = require('../server')
 
+// Criação de nova categoria
 app.post('/importData/categoria', async(req, res) => {
+
+    // Validações Iniciais
     if(!req.body || !req.body.dataRows){
         res.status(400).send({
             error:"Parâmetros esperados não encontrados!"
@@ -8,7 +11,7 @@ app.post('/importData/categoria', async(req, res) => {
         return
     }
 
-    let { cd_categoria, nm_categoria, ds_categoria } = req.body.dataRows
+    let { cd_categoria, nm_categoria } = req.body.dataRows
 
     if(!cd_categoria || !nm_categoria){
         res.status(400).send({
@@ -17,6 +20,8 @@ app.post('/importData/categoria', async(req, res) => {
     }
 
     try{
+        
+        // Executa a procedure de inserção
         await con.promise().beginTransaction()
 
         let [data] = await con.promise().execute(`CALL NOVO_CATEGORIA ( ?, ?)`,
@@ -30,6 +35,8 @@ app.post('/importData/categoria', async(req, res) => {
         await con.promise().commit()
     }
     catch(err){
+
+        // Tratamento de Erros
         await con.promise().rollback()
         
         if(err.code == "ER_DUP_ENTRY"){

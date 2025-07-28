@@ -1,7 +1,9 @@
 const { app, con } = require('../server')
 
+// Criação de Novo pedido
 app.post('/importData/login', async(req, res) => {
 
+    // Validações Iniciais
     if(!req.body || !req.body.dataRows){
         res.status(400).send({
             error:"Parâmetros esperados não encontrados!"
@@ -25,6 +27,8 @@ app.post('/importData/login', async(req, res) => {
     }
 
     try{
+        
+        // Execução da procedure de inserção
         await con.promise().beginTransaction()
         let [data] = await con.promise().execute(`CALL NOVO_CLIENTE(?, ?, ?)`,
             [nm_cliente, numero, senha]
@@ -37,6 +41,8 @@ app.post('/importData/login', async(req, res) => {
         return
     }
     catch(err){
+        
+        // Tratamento de Erros
         await con.promise().rollback()
 
         if(err.code == "ER_DUP_ENTRY"){

@@ -28,11 +28,14 @@ app.post('/importData/categoria', async(req, res) => {
             [cd_categoria, nm_categoria]
         )
 
+        await con.promise().commit()
+
+        
         res.status(200).send({
             sucesso: "Registro salvo com sucesso!"
         })
 
-        await con.promise().commit()
+        
     }
     catch(err){
 

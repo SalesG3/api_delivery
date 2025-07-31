@@ -13,24 +13,24 @@ app.get('/exportData/entidade', async(req, res) => {
 })
 
 // Consultar Categorias:
-app.get('/exportData/categorias', async(req, res) => {
+app.get('/exportData/categoria', async(req, res) => {
     
     let [data] = await con.promise().query(`SELECT * FROM CATEGORIAS`)
 
     res.status(200).send(
-        data[0]
+        data
     )
 
     return
 })
 
 // Consultar Produtos:
-app.get('/exportData/produtos', async(req, res) => {
+app.get('/exportData/produto', async(req, res) => {
     
     let [data] = await con.promise().query(`SELECT * FROM PRODUTOS`)
 
     res.status(200).send(
-        data[0]
+        data
     )
 
     return

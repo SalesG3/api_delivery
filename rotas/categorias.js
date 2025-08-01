@@ -56,3 +56,65 @@ app.post('/importData/categoria', async(req, res) => {
         }
     }
 })
+
+
+// Altera categorias
+app.post('/importData/categoria/:id', async(req, res) => {
+
+    // Validações iniciais
+    if(!req.body || !req.body.dataRows || !req.params || !req.params.id){
+        res.status(400).send({
+            error: "Parâmetros esperados não encontrados!"
+        })
+        return
+    }
+
+    let id_categoria = req.params.id
+    let { cd_categoria, nm_categoria } = req.body.dataRows
+
+    if(!cd_categoria || !nm_categoria){
+        res.status(400).send({
+            error: "Parâmetros esperados não encontrados!"
+        })
+        return
+    }
+
+    // Execução da procedure no banco de dados
+    try{
+        await con.promise().beginTransaction()
+
+        let [data] = await con.promise().execute(`CALL UPDATE_CATEGORIA( ?, ?, ?)`,
+            [id_categoria, cd_categoria, nm_categoria]
+        )
+
+        if(data.affectedRows < 1){
+            res.status(400).send({
+                error: `Chave Inexistente! CATEGORIA.ID_CATEGORIA(${id_categoria})`
+            })
+            return
+        }
+
+        await con.promise().commit()
+        res.status(200).send({
+            sucesso: "Atualização realizada com sucesso!"
+        })
+    }
+
+    // Tratamento de erros
+    catch(err){
+        await con.promise().rollback()
+
+        if(err.code == "ER_DUP_ENTRY"){
+            let match = err.sqlMessage.match(/for key '(.*?)'/)
+
+            res.status(400).send({
+                unique: `Chave Duplicada! (${match[1].split('.')})`
+            })
+        }
+        else{
+            res.send({
+                error: err
+            })
+        }
+    }
+})

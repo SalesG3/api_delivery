@@ -11,9 +11,9 @@ app.post('/importData/categoria', async(req, res) => {
         return
     }
 
-    let { cd_categoria, nm_categoria } = req.body.dataRows
+    let { CD_CATEGORIA, NM_CATEGORIA } = req.body.dataRows
 
-    if(!cd_categoria || !nm_categoria){
+    if(!CD_CATEGORIA || !NM_CATEGORIA){
         res.status(400).send({
             error:"Parâmetros esperados não encontrados!"
         })
@@ -25,7 +25,7 @@ app.post('/importData/categoria', async(req, res) => {
         await con.promise().beginTransaction()
 
         let [data] = await con.promise().execute(`CALL NOVO_CATEGORIA ( ?, ?)`,
-            [cd_categoria, nm_categoria]
+            [CD_CATEGORIA, NM_CATEGORIA]
         )
 
         await con.promise().commit()
@@ -59,7 +59,7 @@ app.post('/importData/categoria', async(req, res) => {
 
 
 // Altera categorias
-app.post('/importData/categoria/:id', async(req, res) => {
+app.put('/importData/categoria/:id', async(req, res) => {
 
     // Validações iniciais
     if(!req.body || !req.body.dataRows || !req.params || !req.params.id){
@@ -69,10 +69,10 @@ app.post('/importData/categoria/:id', async(req, res) => {
         return
     }
 
-    let id_categoria = req.params.id
-    let { cd_categoria, nm_categoria } = req.body.dataRows
+    let ID_CATEGORIA = req.params.id
+    let { CD_CATEGORIA, NM_CATEGORIA } = req.body.dataRows
 
-    if(!cd_categoria || !nm_categoria){
+    if(!CD_CATEGORIA || !NM_CATEGORIA){
         res.status(400).send({
             error: "Parâmetros esperados não encontrados!"
         })
@@ -84,12 +84,12 @@ app.post('/importData/categoria/:id', async(req, res) => {
         await con.promise().beginTransaction()
 
         let [data] = await con.promise().execute(`CALL UPDATE_CATEGORIA( ?, ?, ?)`,
-            [id_categoria, cd_categoria, nm_categoria]
+            [ID_CATEGORIA, CD_CATEGORIA, NM_CATEGORIA]
         )
 
         if(data.affectedRows < 1){
             res.status(400).send({
-                error: `Chave Inexistente! CATEGORIA.ID_CATEGORIA(${id_categoria})`
+                error: `Chave Inexistente! CATEGORIA.ID_CATEGORIA(${ID_CATEGORIA})`
             })
             return
         }

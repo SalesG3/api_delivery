@@ -5,16 +5,16 @@ app.post('/importData/pedido', async(req, res) => {
 
     // Validações Iniciais
     if(!req.body || !req.body.dataRows){
-        res.status(400).send({
+        res.STATUS_PEDIDO(400).send({
             error:"Parâmetros esperados não encontrados!"
         })
         return
     }
 
-    let { cd_pedido, id_cliente, pagamento, status, itens } = req.body.dataRows
+    let { CD_PEDIDO, ID_CLIENTE, PAGAMENTO, STATUS_PEDIDO, ITENS_PEDIDO } = req.body.dataRows
 
-    if(!cd_pedido || !id_cliente || !pagamento || !status, !itens){
-        res.status(400).send({
+    if(!CD_PEDIDO || !ID_CLIENTE || !PAGAMENTO || !STATUS_PEDIDO, !ITENS_PEDIDO){
+        res.STATUS_PEDIDO(400).send({
             error:"Parâmetros esperados não encontrados!"
         })
         return
@@ -26,23 +26,23 @@ app.post('/importData/pedido', async(req, res) => {
         await con.promise().beginTransaction()
 
         let [data] = await con.promise().execute(`CALL NOVO_PEDIDO( ?, ?, ?, ?);`,
-            [cd_pedido, id_cliente, pagamento, status]
+            [CD_PEDIDO, ID_CLIENTE, PAGAMENTO, STATUS_PEDIDO]
         )
-        let id_pedido = data[0][0].ID_PEDIDO
+        let ID_PEDIDO = data[0][0].ID_PEDIDO
 
         let sql = `INSERT INTO ITENS_PEDIDO (ID_PEDIDO, ID_PRODUTO, QUANTIDADE, VL_UNITARIO) VALUES `;
-        for(let i = 0; i < itens.length; i++){
-            sql += `(${id_pedido}, ${itens[i].id_produto}, ${itens[i].quantidade}, ${itens[i].vl_unitario})`
+        for(let i = 0; i < ITENS_PEDIDO.length; i++){
+            sql += `(${ID_PEDIDO}, ${ITENS_PEDIDO[i].ID_PRODUTO}, ${ITENS_PEDIDO[i].QUANTIDADE}, ${ITENS_PEDIDO[i].VL_UNITARIO})`
         }
 
         sql = sql.replaceAll(')(','),(');
 
-        let [dataItens] = await con.promise().execute(sql);
+        let [itens] = await con.promise().execute(sql);
 
         await con.promise().commit()
 
-        res.status(200).send({
-            sucesso: `${dataItens.affectedRows} registros inseridos com sucesso`
+        res.STATUS_PEDIDO(200).send({
+            sucesso: `${itens.affectedRows} registros inseridos com sucesso`
         })
     }
 
@@ -53,7 +53,7 @@ app.post('/importData/pedido', async(req, res) => {
         if(err.code == "ER_DUP_ENTRY"){
             let match = err.sqlMessage.match(/for key '(.*?)'/)
             
-            res.status(400).send({
+            res.STATUS_PEDIDO(400).send({
                 unique: `Chave Duplicada! (${match[1].split('.')})`
             })
 
@@ -61,7 +61,7 @@ app.post('/importData/pedido', async(req, res) => {
         }
         else{
             
-            res.status(500).send(
+            res.STATUS_PEDIDO(500).send(
                 err
             )
 
@@ -75,6 +75,6 @@ app.get('/exportData/pedido', async(req, res) => {
 
     let [data] = await con.promise().execute(`CALL GET_PEDIDOS()`)
 
-    res.status(200).send(data[0])
+    res.STATUS_PEDIDO(200).send(data[0])
 
 })

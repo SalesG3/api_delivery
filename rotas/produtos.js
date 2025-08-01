@@ -18,9 +18,9 @@ app.post('/importData/produto', upload.single('img'), async(req, res) => {
 
     let json = JSON.parse(req.body.json)
 
-    let { cd_produto, nm_produto, ds_produto, vl_produto, id_categoria } = json.dataRows
+    let { CD_PRODUTO, NM_PRODUTO, DS_PRODUTO, VL_PRODUTO, ID_CATEGORIA } = json.dataRows
 
-    if(!cd_produto || !nm_produto || !vl_produto || !id_categoria){
+    if(!CD_PRODUTO || !NM_PRODUTO || !VL_PRODUTO || !ID_CATEGORIA){
         res.status(400).send({
             error:"Parâmetros esperados não encontrados!"
         })
@@ -33,7 +33,7 @@ app.post('/importData/produto', upload.single('img'), async(req, res) => {
         await con.promise().beginTransaction()
 
         let [data] = await con.promise().execute(`CALL NOVO_PRODUTO ( ?, ?, ?, ?, ?)`,
-            [cd_produto, nm_produto, ds_produto, vl_produto, id_categoria]
+            [CD_PRODUTO, NM_PRODUTO, DS_PRODUTO, VL_PRODUTO, ID_CATEGORIA]
         )
 
         if(req.file){

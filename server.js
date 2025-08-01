@@ -15,6 +15,12 @@ const auth = function(req, res, next){
         return
     }
 
+    else if(req.headers.token == process.env.TOKEN && req.method == "PUT"){
+        console.log("Alteração realizada! Rota: " + req.url)
+        next()
+        return
+    }
+
     else{
         console.log("Token Inválido! IP" + req.ip)
         res.status(401).send({auth: "Não autorizado!"})

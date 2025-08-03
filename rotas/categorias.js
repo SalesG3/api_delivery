@@ -72,7 +72,7 @@ app.put('/importData/categoria/:id', async(req, res) => {
     let ID_CATEGORIA = req.params.id
     let { CD_CATEGORIA, NM_CATEGORIA } = req.body.dataRows
 
-    if(!CD_CATEGORIA || !NM_CATEGORIA){
+    if(!CD_CATEGORIA || !NM_CATEGORIA || !ID_CATEGORIA){
         res.status(400).send({
             error: "Parâmetros esperados não encontrados!"
         })
@@ -116,5 +116,42 @@ app.put('/importData/categoria/:id', async(req, res) => {
                 error: err
             })
         }
+    }
+})
+
+app.delete('/deleteData/categoria/:id', async(req, res) => {
+
+    // Validações Iniciais
+    if(!req.params.id){
+        res.status(400).send({
+            error: "Parâmetros esperados não encontrados!"
+        })
+        return
+    }
+
+    // Execução no banco
+    try{
+        let [data] = await con.promise().execute(`DELETE FROM CATEGORIAS WHERE ID_CATEGORIA = ?`,
+            [req.params.id]
+        )
+
+        if(data.affectedRows < 1){
+            res.status(400).send({
+                error: `Chave Inexistente! CATEGORIA.ID_CATEGORIA(${req.params.id})`
+            })
+            return
+        }
+        else{
+            res.status(200).send({
+                sucesso: "Registro deletado do banco de dados!"
+            })
+        }
+    }
+
+    // Tratamento de erros
+    catch(err){
+        res.status(500).send({
+            error: err
+        })
     }
 })

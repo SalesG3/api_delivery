@@ -46,12 +46,14 @@ server.listen(process.env.PORT,(err) => {
 // Conexão com Banco de Dados:
 const mysql = require('mysql2')
 
-const con = mysql.createConnection(process.env.DBURL)
+const con = mysql.createPool(process.env.DBURL)
 
+/*
 con.connect((err) =>{
     if(err) throw err
     console.log("Banco de Dados Conectado com sucesso!!")
 })
+*/
 
 // Exportação dos Módulos:
 

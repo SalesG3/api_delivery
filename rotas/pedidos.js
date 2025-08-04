@@ -2,6 +2,7 @@ const { app, con } = require('../server')
 
 // Criação de Novo pedido
 app.post('/importData/pedido', async(req, res) => {
+    let connect = await con.promise().getConnection()
 
     // Validações Iniciais
     if(!req.body || !req.body.dataRows){
@@ -22,10 +23,9 @@ app.post('/importData/pedido', async(req, res) => {
 
     // Execução e Tratamento do Banco
     try{
+        await connect.promise().beginTransaction()
 
-        await con.promise().beginTransaction()
-
-        let [data] = await con.promise().execute(`CALL NOVO_PEDIDO( ?, ?, ?, ?);`,
+        let [data] = await connect.promise().execute(`CALL NOVO_PEDIDO( ?, ?, ?, ?);`,
             [CD_PEDIDO, ID_CLIENTE, PAGAMENTO, STATUS_PEDIDO]
         )
         let ID_PEDIDO = data[0][0].ID_PEDIDO
@@ -37,9 +37,10 @@ app.post('/importData/pedido', async(req, res) => {
 
         sql = sql.replaceAll(')(','),(');
 
-        let [itens] = await con.promise().execute(sql);
+        let [itens] = await connect.promise().execute(sql);
 
-        await con.promise().commit()
+        await connect.promise().commit()
+        connect.release()
 
         res.status(200).send({
             sucesso: `${itens.affectedRows} registros inseridos com sucesso`
@@ -48,13 +49,14 @@ app.post('/importData/pedido', async(req, res) => {
 
     // Tratamento de Erros
     catch(err){
-        await con.promise().rollback()
+        await connect.promise().rollback()
+        connect.release()
 
         if(err.code == "ER_DUP_ENTRY"){
             let match = err.sqlMessage.match(/for key '(.*?)'/)
             
             res.status(400).send({
-                unique: `Chave Duplicada! (${match[1].split('.')})`
+                unique: `Chave Duplicada! (${match[1]})`
             })
 
             return

@@ -29,12 +29,10 @@ app.post('/importData/login', async(req, res) => {
     try{
         
         // Execução da procedure de inserção
-        await con.promise().beginTransaction()
         let [data] = await con.promise().execute(`CALL NOVO_CLIENTE(?, ?, ?)`,
             [nm_cliente, numero, senha]
         )
 
-        await con.promise().commit()
         res.status(200).send({
             sucesso: "Usuário cadastrado com sucesso!"
         })
@@ -43,13 +41,11 @@ app.post('/importData/login', async(req, res) => {
     catch(err){
         
         // Tratamento de Erros
-        await con.promise().rollback()
-
         if(err.code == "ER_DUP_ENTRY"){
             let match = err.sqlMessage.match(/for key '(.*?)'/)
             
             res.status(400).send({
-                unique: `Chave Duplicada! (${match[1].split('.')})`
+                unique: `Chave Duplicada! (${match[1]})`
             })
             return
         }

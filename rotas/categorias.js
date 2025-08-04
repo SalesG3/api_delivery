@@ -17,36 +17,29 @@ app.post('/importData/categoria', async(req, res) => {
         res.status(400).send({
             error:"Parâmetros esperados não encontrados!"
         })
+        return
     }
 
     try{
         
         // Executa a procedure de inserção
-        await con.promise().beginTransaction()
-
         let [data] = await con.promise().execute(`CALL NOVO_CATEGORIA ( ?, ?)`,
             [CD_CATEGORIA, NM_CATEGORIA]
         )
-
-        await con.promise().commit()
-
         
         res.status(200).send({
             sucesso: "Registro salvo com sucesso!"
         })
 
-        
     }
     catch(err){
 
-        // Tratamento de Erros
-        await con.promise().rollback()
-        
+        // Tratamento de Erros        
         if(err.code == "ER_DUP_ENTRY"){
             let match = err.sqlMessage.match(/for key '(.*?)'/)
             
             res.status(400).send({
-                unique: `Chave Duplicada! (${match[1].split('.')})`
+                unique: `Chave Duplicada! (${match[1]})`
             })
         }
         else{
@@ -81,8 +74,6 @@ app.put('/importData/categoria/:id', async(req, res) => {
 
     // Execução da procedure no banco de dados
     try{
-        await con.promise().beginTransaction()
-
         let [data] = await con.promise().execute(`CALL UPDATE_CATEGORIA( ?, ?, ?)`,
             [ID_CATEGORIA, CD_CATEGORIA, NM_CATEGORIA]
         )
@@ -94,22 +85,21 @@ app.put('/importData/categoria/:id', async(req, res) => {
             return
         }
 
-        await con.promise().commit()
         res.status(200).send({
             sucesso: "Atualização realizada com sucesso!"
         })
+        return
     }
 
     // Tratamento de erros
     catch(err){
-        await con.promise().rollback()
-
         if(err.code == "ER_DUP_ENTRY"){
             let match = err.sqlMessage.match(/for key '(.*?)'/)
 
             res.status(400).send({
-                unique: `Chave Duplicada! (${match[1].split('.')})`
+                unique: `Chave Duplicada! (${match[1]})`
             })
+            return
         }
         else{
             res.send({

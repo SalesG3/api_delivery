@@ -7,6 +7,7 @@ const upload = multer({dest: "uploads/"})
 const { uploadImg } = require('../servicos/cloudinary')
 
 app.post('/importData/produto', upload.single('img'), async(req, res) => {
+    let connect = await con.promise().getConnection()
 
     // Validações Iniciais
     if(!req.body || !req.body.json){
@@ -30,9 +31,9 @@ app.post('/importData/produto', upload.single('img'), async(req, res) => {
     try{
 
         // Execução da procedure de inserção
-        await con.promise().beginTransaction()
+        await connect.promise().beginTransaction()
 
-        let [data] = await con.promise().execute(`CALL NOVO_PRODUTO ( ?, ?, ?, ?, ?)`,
+        let [data] = await connect.promise().execute(`CALL NOVO_PRODUTO ( ?, ?, ?, ?, ?)`,
             [CD_PRODUTO, NM_PRODUTO, DS_PRODUTO, VL_PRODUTO, ID_CATEGORIA]
         )
 
@@ -43,11 +44,13 @@ app.post('/importData/produto', upload.single('img'), async(req, res) => {
 
             let url = await uploadImg(img_path, data[0][0].ID_PRODUTO)
 
-            let [update] = await con.promise().execute(`UPDATE PRODUTOS SET IMG_PRODUTO = ? WHERE ID_PRODUTO = ?`,
+            let [update] = await connect.promise().execute(`UPDATE PRODUTOS SET IMG_PRODUTO = ? WHERE ID_PRODUTO = ?`,
                 [url, data[0][0].ID_PRODUTO]
             )
 
-            await con.promise().commit()
+            await connect.promise().commit()
+            connect.release()
+
             fs.unlink(img_path, (err) => {
                 if(err) throw err
                 return
@@ -60,7 +63,8 @@ app.post('/importData/produto', upload.single('img'), async(req, res) => {
             return
         }
 
-        await con.promise().commit()
+        await connect.promise().commit()
+        connect.release()
 
         res.status(200).send({
             sucesso: "Registro salvo sem imagem!"
@@ -78,13 +82,14 @@ app.post('/importData/produto', upload.single('img'), async(req, res) => {
         }
 
         // Tratamento de erros banco de dados
-        await con.promise().rollback()
+        await connect.promise().rollback()
+        connect.release()
         
 
         if(err.code == "ER_DUP_ENTRY"){
             let match = err.sqlMessage.match(/for key '(.*?)'/)
             res.status(400).send({
-                unique: `Chave Duplicada! (${match[1].split('.')})`
+                unique: `Chave Duplicada! (${match[1]})`
             })
         }
         else{

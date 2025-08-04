@@ -21,6 +21,12 @@ const auth = function(req, res, next){
         return
     }
 
+    else if(req.headers.token == process.env.TOKEN && req.method == "DELETE"){
+        console.log("Exclusão realizada! Rota: " + req.url)
+        next()
+        return
+    }
+
     else{
         console.log("Token Inválido! IP" + req.ip)
         res.status(401).send({auth: "Não autorizado!"})
@@ -47,13 +53,6 @@ server.listen(process.env.PORT,(err) => {
 const mysql = require('mysql2')
 
 const con = mysql.createPool(process.env.DBURL)
-
-/*
-con.connect((err) =>{
-    if(err) throw err
-    console.log("Banco de Dados Conectado com sucesso!!")
-})
-*/
 
 // Exportação dos Módulos:
 

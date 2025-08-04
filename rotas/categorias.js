@@ -140,6 +140,12 @@ app.delete('/deleteData/categoria/:id', async(req, res) => {
 
     // Tratamento de erros
     catch(err){
+        if(err.code == "ER_ROW_IS_REFERENCED_2"){
+            res.status(400).send({
+                erro: "Não foi possível excluir pois o registro possui dependências!"
+            })
+            return
+        }
         res.status(500).send({
             error: err
         })

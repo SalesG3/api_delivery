@@ -4,7 +4,7 @@ const fs = require('fs')
 const multer = require('multer')
 
 const upload = multer({dest: "uploads/"})
-const { uploadImg } = require('../servicos/cloudinary')
+const { uploadImg, deleteImg } = require('../servicos/cloudinary')
 
 app.post('/importData/produto', upload.single('img'), async(req, res) => {
     let connect = await con.promise().getConnection()
@@ -113,6 +113,7 @@ app.delete('/deleteData/produto/:id', async(req, res) => {
 
     // Execução no Banco
     try{
+        //await deleteImg(req.params.id) Comentado para testes posteriores
 
         let [data] = await con.promise().execute(`DELETE FROM PRODUTOS WHERE ID_PRODUTO = ?`,
             [req.params.id]
@@ -144,5 +145,105 @@ app.delete('/deleteData/produto/:id', async(req, res) => {
             erro: err
         })
         return
+    }
+})
+
+app.put('/importData/produto/:id',upload.single('img'), async(req, res) => {
+    let connect = await con.promise().getConnection()
+
+    // Validações Iniciais
+    if(!req.body || !req.body.json){
+        res.status(400).send({
+            error:"Parâmetros esperados não encontrados!"
+        })
+        return
+    }
+
+    let json = JSON.parse(req.body.json)
+
+    let { CD_PRODUTO, NM_PRODUTO, DS_PRODUTO, VL_PRODUTO, ID_CATEGORIA, SN_PROMOCAO, VL_PROMOCAO } = json
+
+    if(!CD_PRODUTO || !NM_PRODUTO || !VL_PRODUTO || !ID_CATEGORIA ){
+        res.status(400).send({
+            error:"Parâmetros esperados não encontrados!"
+        })
+        return
+    }
+
+    SN_PROMOCAO = SN_PROMOCAO || null
+    VL_PROMOCAO = VL_PROMOCAO || null
+
+    try{
+
+        // Execução da Procedure de Alteração
+        await connect.beginTransaction()
+
+        let [data] = await connect.execute(`CALL UPDATE_PRODUTO ( ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [req.params.id, CD_PRODUTO, NM_PRODUTO, DS_PRODUTO, VL_PRODUTO, ID_CATEGORIA, SN_PROMOCAO, VL_PROMOCAO]
+        )
+
+        if(req.file){
+            let img_path = req.file.destination + req.file.originalname
+
+            fs.renameSync(req.file.path, img_path)
+
+            let url = await uploadImg(img_path, req.params.id)
+
+            let [update] = await connect.execute(`UPDATE PRODUTOS SET IMG_PRODUTO = ? WHERE ID_PRODUTO = ?`,
+                [url, req.params.id]
+            )
+
+            await connect.commit()
+            connect.release()
+
+            fs.unlink(img_path, (err) => {
+                if(err) throw err
+                return
+            })
+
+            res.status(200).send({
+                sucesso: "Registro salvo com sucesso!",
+                img_url: url
+            })
+            return
+        }
+
+        await connect.commit()
+        connect.release()
+
+        res.status(200).send({
+            sucesso: "Registro salvo com sucesso!"
+        })
+        return
+    }
+    catch(err){
+        console.log(err)
+
+        if(req.file){
+            let img_path = req.file.destination + req.file.originalname
+
+            fs.renameSync(req.file.path, img_path)
+            fs.unlink(img_path, (err) => {
+                if(err) throw err
+                return
+            })
+        }
+
+        await connect.rollback()
+        connect.release()
+
+        if(err.code == "ER_DUP_ENTRY"){
+            let match = err.sqlMessage.match(/for key '(.*?)'/)
+            res.status(400).send({
+                unique: `Chave Duplicada! (${match[1]})`
+            })
+            return
+        }
+
+        else{
+            res.status(500).send({
+                error: err
+            })
+        }
     }
 })
